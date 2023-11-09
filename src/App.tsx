@@ -1,3 +1,7 @@
+import { AuthClient } from '@dfinity/auth-client';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import { useEffect, useState } from 'react';
 import './App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,7 +12,7 @@ import {
   faRefresh,
 } from '@fortawesome/free-solid-svg-icons';
 
-import { backend } from './declarations/backend';
+import { canisterId, createActor, backend,  } from './declarations/backend';
 
 interface Post {
   id: number;
@@ -16,16 +20,58 @@ interface Post {
   votes: number;
 }
 
+type Vote = { 'Up' : null } |
+  { 'Down' : null };
+
+
+
+
 function App() {
   const [loading, setLoading] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [content, setContent] = useState<string>('');
+  const [authClient, setAuthClient] = useState<AuthClient | undefined>();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [backendActor, setBackendActor] = useState<any>(backend);
+
+  const options = {
+    createOptions: {
+      idleOptions: {
+        // Set to true if you do not want idle functionality
+        disableIdle: true,
+      },
+    },
+
+    loginOptions: {
+      identityProvider:
+        process.env.DFX_NETWORK === 'local'
+          ? `http://localhost:4943?canisterId=${process.env.CANISTER_ID_INTERNET_IDENTITY}#authorize`
+          : 'https://identity.ic0.app/#authorize',
+    },
+  };
+
+  const login = () => {
+    if (authClient) {
+      authClient.login({
+        ...options.loginOptions,
+        onSuccess: () => {
+          updateClient(authClient);
+        },
+      });
+    }
+  };
+
+  async function logout() {
+    await authClient?.logout();
+    if (authClient) {
+      await updateClient(authClient);
+    }
+  }
 
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const posts = await backend.get_posts();
-      console.log(posts);
+      const posts = await backendActor.get_posts();
       setPosts(posts);
     } catch (err) {
       console.error(err);
@@ -36,6 +82,7 @@ function App() {
 
   const newPost = async () => {
     try {
+      if (!isAuthenticated) throw new Error('Not authenticated');
       setLoading(true);
       const id = Math.floor(Math.random() * 1000);
       const post: Post = {
@@ -43,38 +90,99 @@ function App() {
         content: content,
         votes: 0,
       };
-      backend.insert(post);
+      await backendActor.insert(post);
       const updatedPosts = [...posts, post];
       setPosts(updatedPosts);
     } catch (err) {
       console.error(err);
+      if (!isAuthenticated) {
+        notify('NOT_AUTHENTICATED');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleRemove = async (postId: number) => {
-    backend.remove(postId);
-    const updatedPosts = posts.filter((post) => post.id !== postId);
-    setPosts(updatedPosts);
+    try {
+      await backendActor.remove(postId);
+      const updatedPosts = posts.filter((post) => post.id !== postId);
+      setPosts(updatedPosts);
+    } catch (err) {
+      console.error(err);
+      if (!isAuthenticated) {
+        notify('NOT_AUTHENTICATED');
+      }
+    }
   };
 
   useEffect(() => {
     fetchPosts();
+    AuthClient.create().then(async (client) => {
+      updateClient(client);
+    });
   }, []);
 
-  const handleVote = async (postId: number, increment: number) => {
-    let updated_post = await backend.vote(postId, increment);
-    setPosts(
-      posts.map((post) => {
-        if (post.id === postId) {
-          return { ...post, updated_post };
-        }
-        return post;
-      }),
-    );
-    fetchPosts();
+  const handleVote = async (postId: number, vote: Vote) => {
+    try {
+      setLoading(true);
+      if (!isAuthenticated) throw new Error('Not authenticated');
+      let updated_post = await backendActor.vote(postId, vote );
+
+      setPosts(
+        posts.map((post) => {
+          if (post.id === postId) {
+            return { ...post, updated_post };
+          }
+          return post;
+        }),
+      );
+      fetchPosts();
+    } catch (err) {
+      console.log(err);
+      if (!isAuthenticated) {
+        notify('NOT_AUTHENTICATED');
+      } else {
+        notify('ALREADY_VOTED');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
+
+  async function updateClient(client: AuthClient) {
+    const isAuthenticated = await client.isAuthenticated();
+    setIsAuthenticated(isAuthenticated);
+
+    const identity = client.getIdentity();
+
+    setAuthClient(client);
+
+    const actor = createActor(canisterId, {
+      agentOptions: {
+        identity,
+      },
+    });
+
+    setBackendActor(actor);
+  }
+
+  const msg = (TYPE: string) => {
+    switch (TYPE) {
+      case 'NOT_AUTHENTICATED':
+        return 'You are not logged in';
+      case 'ALREADY_VOTED':
+        return 'You have already voted on this post';
+    }
+  };
+
+  const notify = (TYPE: string) => {
+    toast.error(msg(TYPE), {
+      position: toast.POSITION.BOTTOM_CENTER,
+    });
+  };
+
+  const sortedPosts = [...posts].sort((a, b) => b.votes - a.votes);
 
   return (
     <div>
@@ -83,6 +191,15 @@ function App() {
         {' '}
         <FontAwesomeIcon icon={faRefresh} /> Refresh Posts
       </button>
+      {isAuthenticated ? (
+        <button onClick={logout} style={{ opacity: loading ? 0.5 : 1 }}>
+          Logout
+        </button>
+      ) : (
+        <button onClick={login} style={{ opacity: loading ? 0.5 : 1 }}>
+          Login
+        </button>
+      )}
       <div className="card">
         <input
           value={content}
@@ -92,15 +209,15 @@ function App() {
         <button onClick={newPost}>New Post</button>
       </div>
       <ul>
-        {posts.map((post) => (
+        {sortedPosts.map((post) => (
           <li key={post.id}>
             <div>{post.content}</div>
             <div>
-              <button onClick={() => handleVote(post.id, 1)}>
+              <button onClick={() => handleVote(post.id, {"Up": null})}>
                 <FontAwesomeIcon icon={faArrowUp} />
               </button>
               <span>{post.votes}</span>
-              <button onClick={() => handleVote(post.id, -1)}>
+              <button onClick={() => handleVote(post.id,  {"Down": null})}>
                 <FontAwesomeIcon icon={faArrowDown} />
               </button>
               <button onClick={() => handleRemove(post.id)}>
@@ -111,6 +228,7 @@ function App() {
           </li>
         ))}
       </ul>
+      <ToastContainer autoClose={2000} />
     </div>
   );
 }

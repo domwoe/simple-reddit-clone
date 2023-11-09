@@ -5,11 +5,16 @@ type Post = record {
     votes: int32;
 };
 
+type Vote = variant {
+  Up;
+  Down;
+};
+
 
 service : {
   "get" : (nat32) -> (opt Post) query;
   "get_posts" : () -> (vec Post) query;
   "insert" : (Post) -> ();
   "remove" : (nat32) -> ();
-  "vote" : (nat32, int32) -> (opt Post);
+  "vote" : (nat32, Vote) -> (Post) ;
 };
