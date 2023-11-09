@@ -1,67 +1,92 @@
-use std::cell::RefCell;
 
-use candid::{CandidType, Deserialize};
-use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
-use ic_stable_memory::{
-    derive::{CandidAsDynSizeBytes, StableType},
-    retrieve_custom_data, stable_memory_init, stable_memory_post_upgrade,
-    stable_memory_pre_upgrade, store_custom_data, SBox,
-};
+use candid::{CandidType, Decode, Deserialize, Encode};
 
-#[derive(CandidType, Deserialize, StableType, CandidAsDynSizeBytes, Debug, Clone)]
-struct State {
-    counter: u32,
+use ic_cdk::{query, update};
+use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
+use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap, Storable, storable::Bound};
+use std::{borrow::Cow, cell::RefCell};
+
+type Memory = VirtualMemory<DefaultMemoryImpl>;
+
+const MAX_VALUE_SIZE: u32 = 100;
+
+#[derive(CandidType, Clone, Deserialize)]
+struct Item {
+    id: u32,
+    content: String,
+    votes: i32,
 }
 
-impl Default for State {
-    fn default() -> Self {
-        State { counter: 0 }
+// For a type to be used in a `StableBTreeMap`, it needs to implement the `Storable`
+// trait, which specifies how the type can be serialized/deserialized.
+//
+// In this example, we're using candid to serialize/deserialize the struct, but you
+// can use anything as long as you're maintaining backward-compatibility. The
+// backward-compatibility allows you to change your struct over time (e.g. adding
+// new fields).
+//
+// The `Storable` trait is already implemented for several common types (e.g. u64),
+// so you can use those directly without implementing the `Storable` trait for them.
+impl Storable for Item {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
     }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Bounded {
+        max_size: MAX_VALUE_SIZE,
+        is_fixed_size: false,
+    };
 }
+
 
 thread_local! {
-    static STATE: RefCell<Option<State>> = RefCell::default();
+    // The memory manager is used for simulating multiple memories. Given a `MemoryId` it can
+    // return a memory that can be used by stable structures.
+    static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
+        RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
+
+    // Initialize a `StableBTreeMap` with `MemoryId(0)`.
+    static ITEMS: RefCell<StableBTreeMap<u32, Item, Memory>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))),
+        )
+    );
 }
 
-#[init]
-fn init() {
-    stable_memory_init();
 
-    STATE.with(|s| {
-        *s.borrow_mut() = Some(State::default());
-    });
-}
-
-#[pre_upgrade]
-fn pre_upgrade() {
-    let state = STATE.with(|s| s.borrow_mut().take().unwrap());
-    let boxed_state = SBox::new(state).expect("Out of memory");
-
-    store_custom_data::<State>(0, boxed_state);
-    stable_memory_pre_upgrade().expect("Out of memory");
-}
-
-#[post_upgrade]
-fn post_upgrade() {
-    stable_memory_post_upgrade();
-
-    let state = retrieve_custom_data::<State>(0).unwrap().into_inner();
-    STATE.with(|s| {
-        *s.borrow_mut() = Some(state);
-    });
+#[query]
+fn get(key: u32) -> Option<Item> {
+    ITEMS.with(|p| p.borrow().get(&key))
 }
 
 #[query]
-fn get() -> u32 {
-    STATE.with(|s| s.borrow().as_ref().unwrap().counter)
+fn get_posts() -> Vec<Item> {
+    ITEMS.with(|p| p.borrow().iter().map(|(_id, item)| item ).collect())
+}
+
+// Inserts an entry into the map and returns the previous value of the key if it exists.
+#[update]
+fn insert(value: Item) -> Option<Item> {
+    let key = value.id;
+    ITEMS.with(|p| p.borrow_mut().insert(key, value))
 }
 
 #[update]
-fn inc() {
-    STATE.with(|s| s.borrow_mut().as_mut().unwrap().counter += 1)
+fn vote(key: u32, increment: i32) -> Option<Item> {
+    ITEMS.with(|p| {
+        let post = p.borrow().get(&key).unwrap();
+        let mut post = post.clone();
+        post.votes += increment;
+        p.borrow_mut().insert(key, post.clone());
+        Some(post)
+    })
 }
 
 #[update]
-fn set(value: u32) {
-    STATE.with(|s| s.borrow_mut().as_mut().unwrap().counter = value)
+fn remove(key: u32) -> Option<Item> {
+    ITEMS.with(|p| p.borrow_mut().remove(&key))
 }

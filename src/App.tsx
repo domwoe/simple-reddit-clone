@@ -1,19 +1,32 @@
 import { useEffect, useState } from 'react';
 import './App.css';
-import rustLogo from './assets/rust.svg';
-import reactLogo from './assets/react.svg';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faTrash,
+  faArrowDown,
+  faArrowUp,
+  faRefresh,
+} from '@fortawesome/free-solid-svg-icons';
+
 import { backend } from './declarations/backend';
 
-function App() {
-  const [count, setCount] = useState<number | undefined>();
-  const [loading, setLoading] = useState(false);
+interface Post {
+  id: number;
+  content: string;
+  votes: number;
+}
 
-  // Get the current counter value
-  const fetchCount = async () => {
+function App() {
+  const [loading, setLoading] = useState(false);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [content, setContent] = useState<string>('');
+
+  const fetchPosts = async () => {
     try {
       setLoading(true);
-      const count = await backend.get();
-      setCount(+count.toString()); // Convert BigInt to number
+      const posts = await backend.get_posts();
+      console.log(posts);
+      setPosts(posts);
     } catch (err) {
       console.error(err);
     } finally {
@@ -21,50 +34,83 @@ function App() {
     }
   };
 
-  const increment = async () => {
-    if (loading) return; // Cancel if waiting for a new count
+  const newPost = async () => {
     try {
       setLoading(true);
-      await backend.inc(); // Increment the count by 1
-      await fetchCount(); // Fetch the new count
+      const id = Math.floor(Math.random() * 1000);
+      const post: Post = {
+        id,
+        content: content,
+        votes: 0,
+      };
+      backend.insert(post);
+      const updatedPosts = [...posts, post];
+      setPosts(updatedPosts);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch the count on page load
+  const handleRemove = async (postId: number) => {
+    backend.remove(postId);
+    const updatedPosts = posts.filter((post) => post.id !== postId);
+    setPosts(updatedPosts);
+  };
+
   useEffect(() => {
-    fetchCount();
+    fetchPosts();
   }, []);
 
+  const handleVote = async (postId: number, increment: number) => {
+    let updated_post = await backend.vote(postId, increment);
+    setPosts(
+      posts.map((post) => {
+        if (post.id === postId) {
+          return { ...post, updated_post };
+        }
+        return post;
+      }),
+    );
+    fetchPosts();
+  };
+
   return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-        <a
-          href="https://internetcomputer.org/docs/current/developer-docs/backend/rust/"
-          target="_blank"
-        >
-          <img src={rustLogo} className="logo rust" alt="Rust logo" />
-        </a>
-      </div>
-      <h1>Vite + React + IC (Rust)</h1>
+    <div>
+      <h1>Reddit Clone</h1>
+      <button onClick={fetchPosts}>
+        {' '}
+        <FontAwesomeIcon icon={faRefresh} /> Refresh Posts
+      </button>
       <div className="card">
-        <button onClick={increment} style={{ opacity: loading ? 0.5 : 1 }}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>backend/src/lib.mo</code> and save to test HMR
-        </p>
+        <input
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Enter something..."
+        />
+        <button onClick={newPost}>New Post</button>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite, React, and Rust logos to learn more
-      </p>
+      <ul>
+        {posts.map((post) => (
+          <li key={post.id}>
+            <div>{post.content}</div>
+            <div>
+              <button onClick={() => handleVote(post.id, 1)}>
+                <FontAwesomeIcon icon={faArrowUp} />
+              </button>
+              <span>{post.votes}</span>
+              <button onClick={() => handleVote(post.id, -1)}>
+                <FontAwesomeIcon icon={faArrowDown} />
+              </button>
+              <button onClick={() => handleRemove(post.id)}>
+                {' '}
+                <FontAwesomeIcon icon={faTrash} />
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
