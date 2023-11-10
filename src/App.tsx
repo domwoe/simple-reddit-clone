@@ -34,6 +34,18 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [backendActor, setBackendActor] = useState<any>(backend);
 
+  useEffect(() => {
+    backend
+    .is_anonymous_allowed()
+    .then((allowed) => {
+      if (allowed) {
+          // Use anonymously
+          setIsAuthenticated(true);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
   const options = {
     createOptions: {
       idleOptions: {

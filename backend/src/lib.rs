@@ -7,6 +7,9 @@ use std::{borrow::Cow, cell::RefCell};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
+// Enable if you're using a Gitpod environment
+const ALLOW_ANONYMOUS: bool = true;
+
 const MAX_VALUE_SIZE: u32 = 100;
 
 #[derive(CandidType, Clone, Deserialize)]
@@ -100,13 +103,13 @@ fn get_posts() -> Vec<Post> {
 }
 
 // Inserts an entry into the map and returns the previous value of the key if it exists.
-#[update(guard = is_not_anonymous)]
+#[update(guard = is_authorized)]
 fn insert(value: Post) -> Option<Post> {
     let key = value.id;
     POSTS.with(|p| p.borrow_mut().insert(key, value))
 }
 
-#[update(guard = is_not_anonymous)]
+#[update(guard = is_authorized)]
 fn vote(key: u32, v: Vote) -> Post {
     let mut votes = VOTES.with(|v| v.borrow().get(&key).unwrap_or(Votes { votes: vec![] }));
 
@@ -144,14 +147,20 @@ fn vote(key: u32, v: Vote) -> Post {
     })
 }
 
-#[update(guard = is_not_anonymous)]
+#[update(guard = is_authorized)]
 fn remove(key: u32) -> Option<Post> {
     POSTS.with(|p| p.borrow_mut().remove(&key))
 }
 
+// Check if anonymous usage is allowed
+#[query]
+fn is_anonymous_allowed() -> bool {
+    ALLOW_ANONYMOUS
+}
+
 // We use a guard function to ensure that a caller is authenticated
-pub fn is_not_anonymous() -> Result<(), String> {
-    if caller() == Principal::anonymous() {
+pub fn is_authorized() -> Result<(), String> {
+    if !ALLOW_ANONYMOUS && caller() == Principal::anonymous() {
         return Err(String::from(caller().to_text()));
     }
 
