@@ -8,7 +8,7 @@ tasks:
       sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
       rustup target add wasm32-unknown-unknown
       cargo install cargo-watch
-      dfx start --background --emulator --clean
+      dfx start --background --clean
       npm run setup
     init: |
       npm start

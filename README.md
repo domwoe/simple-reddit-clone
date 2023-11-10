@@ -12,6 +12,14 @@ Check out [Vite + React + Motoko](https://github.com/rvanasa/vite-react-motoko) 
 - How to use @dfinity/agent to interact with the backend canister from a React frontend
 - How to use Internet Identity for authentication and guard canister methods
 
+## Super Quick Start
+
+Run and develop in your browser
+
+```sh
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/domwoe/simple-reddit-clone)
+```
+
 ## Prerequisites
 
 Make sure that [Node.js](https://nodejs.org/en/) `>= 16.x`, [`dfx`](https://internetcomputer.org/docs/current/developer-docs/build/install-upgrade-remove) `>= 0.12.x`, and [Rust](https://www.rust-lang.org/tools/install) are installed on your system.
@@ -39,11 +47,23 @@ When ready, run `dfx deploy` to build and deploy your application locally.
 
 ### Deploying to the Internet Computer (mainnet)
 
+#### Playground (Temporary)
+
+You can deploy your dapp to the playground, where your dapp will be garbage collected after ~ 20m.
+
+```sh
+dfx deploy --playground
+```
+
+#### Permanent
+
 You'll need to have cycles to deploy to the Internet Computer. You can get cycles from the [faucet](https://faucet.dfinity.org/).
 
 ```sh
 dfx deploy --network ic
 ```
+
+You
 
 
 ## Technology Stack
@@ -74,6 +94,4 @@ dfx deploy --network ic
 - Reduce the latency of update calls by passing the `--emulator` flag to `dfx start`.
 - Split your frontend and backend console output by running `npm run frontend` and `npm run backend` in separate terminals.
 
-## Run in your Browser
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/domwoe/simple-reddit-clone)
