@@ -9,16 +9,15 @@ Check out [Vite + React + Motoko](https://github.com/rvanasa/vite-react-motoko) 
 
 - How to use the Rust Canister Development Kit (CDK)
 - How to use stable memory on the Internet Computer using the stable structures library
-- How to use @dfinity/agent to interact with the backend canister from a React frontend
+- How to use `@dfinity/agent` to interact with the backend canister from a React frontend
 - How to use Internet Identity for authentication and guard canister methods
 
 ## Super Quick Start
 
 Run and develop in your browser
 
-```sh
+
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/domwoe/simple-reddit-clone)
-```
 
 ## Prerequisites
 
