@@ -8,7 +8,7 @@ use std::{borrow::Cow, cell::RefCell};
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
 // Enable if you're using a Gitpod environment
-const ALLOW_ANONYMOUS: bool = true;
+const ALLOW_ANONYMOUS: bool = false;
 
 const MAX_VALUE_SIZE: u32 = 100;
 
