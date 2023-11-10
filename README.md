@@ -14,10 +14,11 @@ Check out [Vite + React + Motoko](https://github.com/rvanasa/vite-react-motoko) 
 
 ## Super Quick Start
 
-Run and develop in your browser
-
+Run and develop in your browser:
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/domwoe/simple-reddit-clone)
+
+When using GitPod, please set `ALLOW_ANONYMOUS` to `true` in `backend/src/lib.rs`.
 
 ## Prerequisites
 
