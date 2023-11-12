@@ -31,5 +31,6 @@ export default defineConfig({
     react(),
     environment('all', { prefix: 'CANISTER_' }),
     environment('all', { prefix: 'DFX_' }),
+    environment({ GITPOD_WORKSPACE_URL: '' }),
   ],
 });
