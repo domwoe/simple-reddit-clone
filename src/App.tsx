@@ -30,6 +30,19 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [backendActor, setBackendActor] = useState<any>(backend);
 
+  const getIIUrl = () => {
+
+    if (process.env.DFX_NETWORK === 'local') {
+      if (process.env.GITPOD_WORKSPACE_URL) {
+        return `https://4943-${(process.env.GITPOD_WORKSPACE_URL).replace("https://", "")}?canisterId=${process.env.CANISTER_ID_INTERNET_IDENTITY}#authorize`
+      } else {
+        return `http://localhost:4943?canisterId=${process.env.CANISTER_ID_INTERNET_IDENTITY}#authorize`
+      }
+    } else {
+      'https://identity.ic0.app/#authorize'
+    }
+  }
+
   const options = {
     createOptions: {
       idleOptions: {
@@ -39,10 +52,7 @@ function App() {
     },
 
     loginOptions: {
-      identityProvider:
-        process.env.DFX_NETWORK === 'local'
-          ? `http://localhost:4943?canisterId=${process.env.CANISTER_ID_INTERNET_IDENTITY}#authorize`
-          : 'https://identity.ic0.app/#authorize',
+      identityProvider: getIIUrl()
     },
   };
 

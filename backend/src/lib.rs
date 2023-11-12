@@ -7,7 +7,7 @@ use std::{borrow::Cow, cell::RefCell};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
-// Enable if you're using a Gitpod environment
+// Set to true if you want disable authentication
 const ALLOW_ANONYMOUS: bool = false;
 
 const MAX_VALUE_SIZE: u32 = 100;
