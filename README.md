@@ -9,7 +9,7 @@ Check out [Vite + React + Motoko](https://github.com/rvanasa/vite-react-motoko) 
 
 - How to use the Rust Canister Development Kit (CDK)
 - How to use stable memory on the Internet Computer using the [stable structures library](https://docs.rs/ic-stable-structures/latest/ic_stable_structures/)
-- How to use []`@dfinity/agent`](https://www.npmjs.com/package/@dfinity/agent) to interact with the backend canister from a React frontend
+- How to use [`@dfinity/agent`](https://www.npmjs.com/package/@dfinity/agent) to interact with the backend canister from a React frontend
 - How to use Internet Identity for authentication and guard canister methods
 
 ## Super Quick Start
@@ -19,6 +19,8 @@ Run and develop in your browser:
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/domwoe/simple-reddit-clone)
 
 When using Gitpod, please set `ALLOW_ANONYMOUS` to `true` in `backend/src/lib.rs` to skip logging in via Internet Identity.
+
+For an even simpler version of the dapp without (Internet Identity) authentication, see [this branch](https://github.com/domwoe/simple-reddit-clone/tree/simple-without-auth)
 
 ## Prerequisites
 
