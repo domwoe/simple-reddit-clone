@@ -8,7 +8,7 @@ use std::{borrow::Cow, cell::RefCell};
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
 // Enable if you're using a Gitpod environment
-const ALLOW_ANONYMOUS: bool = false;
+const ALLOW_ANONYMOUS: bool = true;
 
 const MAX_VALUE_SIZE: u32 = 100;
 
@@ -149,6 +149,9 @@ fn vote(key: u32, v: Vote) -> Post {
 
 #[update(guard = is_authorized)]
 fn remove(key: u32) -> Option<Post> {
+    // Remove the votes for the post
+    VOTES.with(|p| p.borrow_mut().remove(&key));
+    // Remove the post
     POSTS.with(|p| p.borrow_mut().remove(&key))
 }
 

@@ -23,7 +23,6 @@ interface Post {
 type Vote = { Up: null } | { Down: null };
 
 function App() {
-  const [loading, setLoading] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [content, setContent] = useState<string>('');
   const [authClient, setAuthClient] = useState<AuthClient | undefined>();
@@ -77,20 +76,18 @@ function App() {
 
   const fetchPosts = async () => {
     try {
-      setLoading(true);
       const posts = await backendActor.get_posts();
       setPosts(posts);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
   const newPost = async () => {
     try {
       if (!isAuthenticated) throw new Error('Not authenticated');
-      setLoading(true);
+      // Not a reliable way to generate unique ids
+      // In a real app, you'd use a UUID or generate the id in the canister
       const id = Math.floor(Math.random() * 1000);
       const post: Post = {
         id,
@@ -105,8 +102,6 @@ function App() {
       if (!isAuthenticated) {
         notify('NOT_AUTHENTICATED');
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -132,7 +127,7 @@ function App() {
 
   const handleVote = async (postId: number, vote: Vote) => {
     try {
-      setLoading(true);
+
       if (!isAuthenticated) throw new Error('Not authenticated');
       let updated_post = await backendActor.vote(postId, vote);
 
@@ -152,8 +147,6 @@ function App() {
       } else {
         notify('ALREADY_VOTED');
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -199,11 +192,11 @@ function App() {
         <FontAwesomeIcon icon={faRefresh} /> Refresh Posts
       </button>
       {isAuthenticated ? (
-        <button onClick={logout} style={{ opacity: loading ? 0.5 : 1 }}>
+        <button onClick={logout}>
           Logout
         </button>
       ) : (
-        <button onClick={login} style={{ opacity: loading ? 0.5 : 1 }}>
+        <button onClick={login}>
           Login
         </button>
       )}
