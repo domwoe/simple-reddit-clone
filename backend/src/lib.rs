@@ -8,7 +8,7 @@ use std::{borrow::Cow, cell::RefCell};
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
 // Enable if you're using a Gitpod environment
-const ALLOW_ANONYMOUS: bool = true;
+const ALLOW_ANONYMOUS: bool = false;
 
 const MAX_VALUE_SIZE: u32 = 100;
 
@@ -43,7 +43,7 @@ impl Storable for Post {
         is_fixed_size: false,
     };
 }
-#[derive(CandidType, Clone, Copy, Deserialize, PartialEq)]
+#[derive(CandidType, Clone, Copy, Debug, Deserialize, PartialEq)]
 enum Vote {
     Up,
     Down,
@@ -119,6 +119,8 @@ fn vote(key: u32, v: Vote) -> Post {
         .enumerate()
         .find(|&(_idx, &(voter, _))| voter == caller());
 
+    ic_cdk::println!("{:?}", &voted);
+
     match voted {
         Some((idx, &value)) => {
             if value.1 == v {
@@ -129,9 +131,11 @@ fn vote(key: u32, v: Vote) -> Post {
         }
         None => {
             votes.votes.push((caller(), v));
-            VOTES.with(|v| v.borrow_mut().insert(key, votes.clone()));
+            
         }
     }
+
+    VOTES.with(|v| v.borrow_mut().insert(key, votes.clone()));
 
     let inc: i32 = match v {
         Vote::Up => 1,

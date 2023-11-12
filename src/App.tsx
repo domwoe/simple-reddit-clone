@@ -26,19 +26,9 @@ function App() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [content, setContent] = useState<string>('');
   const [authClient, setAuthClient] = useState<AuthClient | undefined>();
+  const [isAuthEnabled, setIsAuthEnabled] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [backendActor, setBackendActor] = useState<any>(backend);
-
-  useEffect(() => {
-    backend
-      .is_anonymous_allowed()
-      .then((allowed) => {
-        if (allowed) {
-          setIsAuthenticated(true);
-        }
-      })
-      .catch((err) => console.error(err));
-  }, []);
 
   const options = {
     createOptions: {
@@ -120,14 +110,23 @@ function App() {
 
   useEffect(() => {
     fetchPosts();
-    AuthClient.create().then(async (client) => {
-      updateClient(client);
-    });
+    backend
+      .is_anonymous_allowed()
+      .then((allowed) => {
+        if (allowed) {
+          setIsAuthEnabled(false);
+          setIsAuthenticated(true);
+        } else {
+          AuthClient.create().then(async (client) => {
+            updateClient(client);
+          });
+        }
+      })
+      .catch((err) => console.error(err));
   }, []);
 
   const handleVote = async (postId: number, vote: Vote) => {
     try {
-
       if (!isAuthenticated) throw new Error('Not authenticated');
       let updated_post = await backendActor.vote(postId, vote);
 
@@ -182,6 +181,7 @@ function App() {
     });
   };
 
+  // Sort posts by votes
   const sortedPosts = [...posts].sort((a, b) => b.votes - a.votes);
 
   return (
@@ -192,13 +192,9 @@ function App() {
         <FontAwesomeIcon icon={faRefresh} /> Refresh Posts
       </button>
       {isAuthenticated ? (
-        <button onClick={logout}>
-          Logout
-        </button>
+        isAuthEnabled && <button onClick={logout}>Logout</button>
       ) : (
-        <button onClick={login}>
-          Login
-        </button>
+        isAuthEnabled && <button onClick={login}>Login</button>
       )}
       <div className="card">
         <input
