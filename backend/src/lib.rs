@@ -119,8 +119,6 @@ fn vote(key: u32, v: Vote) -> Post {
         .enumerate()
         .find(|&(_idx, &(voter, _))| voter == caller());
 
-    ic_cdk::println!("{:?}", &voted);
-
     match voted {
         Some((idx, &value)) => {
             if value.1 == v {
@@ -131,7 +129,6 @@ fn vote(key: u32, v: Vote) -> Post {
         }
         None => {
             votes.votes.push((caller(), v));
-            
         }
     }
 
