@@ -1,6 +1,6 @@
 # Simple Reddit Clone
 
-This project is a simple example of a Reddit-like social application running entirely on the Internet Computer
+This project is a simple example of a Reddit-like social application running entirely on the Internet Computer.
 It is based on the [Vite + React + Rust](https://github.com/rvanasa/vite-react-ic-rust) template.
 
 Check out [Vite + React + Motoko](https://github.com/rvanasa/vite-react-motoko) for a beginner-friendly starter project with a [Motoko](https://internetcomputer.org/docs/current/motoko/main/motoko) backend.
@@ -8,8 +8,8 @@ Check out [Vite + React + Motoko](https://github.com/rvanasa/vite-react-motoko) 
 ## What's included
 
 - How to use the Rust Canister Development Kit (CDK)
-- How to use stable memory on the Internet Computer using the stable structures library
-- How to use `@dfinity/agent` to interact with the backend canister from a React frontend
+- How to use stable memory on the Internet Computer using the [stable structures library](https://docs.rs/ic-stable-structures/latest/ic_stable_structures/)
+- How to use []`@dfinity/agent`](https://www.npmjs.com/package/@dfinity/agent) to interact with the backend canister from a React frontend
 - How to use Internet Identity for authentication and guard canister methods
 
 ## Super Quick Start
