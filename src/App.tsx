@@ -17,26 +17,22 @@ interface Post {
 }
 
 function App() {
-  const [loading, setLoading] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
+
   const [content, setContent] = useState<string>('');
 
   const fetchPosts = async () => {
     try {
-      setLoading(true);
       const posts = await backend.get_posts();
       console.log(posts);
       setPosts(posts);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
   const newPost = async () => {
     try {
-      setLoading(true);
       const id = Math.floor(Math.random() * 1000);
       const post: Post = {
         id,
@@ -48,8 +44,6 @@ function App() {
       setPosts(updatedPosts);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 

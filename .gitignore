@@ -29,6 +29,10 @@ dist-ssr
 .dfx
 .vessel
 .mops
+canister_ids.json
 
 # Rust
 target/
+
+# Misc
+.env
