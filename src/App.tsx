@@ -12,7 +12,7 @@ import {
   faRefresh,
 } from '@fortawesome/free-solid-svg-icons';
 
-import { canisterId, createActor, backend,  } from './declarations/backend';
+import { canisterId, createActor, backend } from './declarations/backend';
 
 interface Post {
   id: number;
@@ -20,11 +20,7 @@ interface Post {
   votes: number;
 }
 
-type Vote = { 'Up' : null } |
-  { 'Down' : null };
-
-
-
+type Vote = { Up: null } | { Down: null };
 
 function App() {
   const [loading, setLoading] = useState(false);
@@ -33,6 +29,17 @@ function App() {
   const [authClient, setAuthClient] = useState<AuthClient | undefined>();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [backendActor, setBackendActor] = useState<any>(backend);
+
+  useEffect(() => {
+    backend
+      .is_anonymous_allowed()
+      .then((allowed) => {
+        if (allowed) {
+          setIsAuthenticated(true);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
 
   const options = {
     createOptions: {
@@ -127,7 +134,7 @@ function App() {
     try {
       setLoading(true);
       if (!isAuthenticated) throw new Error('Not authenticated');
-      let updated_post = await backendActor.vote(postId, vote );
+      let updated_post = await backendActor.vote(postId, vote);
 
       setPosts(
         posts.map((post) => {
@@ -213,11 +220,11 @@ function App() {
           <li key={post.id}>
             <div>{post.content}</div>
             <div>
-              <button onClick={() => handleVote(post.id, {"Up": null})}>
+              <button onClick={() => handleVote(post.id, { Up: null })}>
                 <FontAwesomeIcon icon={faArrowUp} />
               </button>
               <span>{post.votes}</span>
-              <button onClick={() => handleVote(post.id,  {"Down": null})}>
+              <button onClick={() => handleVote(post.id, { Down: null })}>
                 <FontAwesomeIcon icon={faArrowDown} />
               </button>
               <button onClick={() => handleRemove(post.id)}>

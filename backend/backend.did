@@ -12,9 +12,10 @@ type Vote = variant {
 
 
 service : {
+  "is_anonymous_allowed" : () -> (bool) query;
   "get" : (nat32) -> (opt Post) query;
   "get_posts" : () -> (vec Post) query;
   "insert" : (Post) -> ();
   "remove" : (nat32) -> ();
-  "vote" : (nat32, Vote) -> (Post) ;
+  "vote" : (nat32, Vote) -> (Post);
 };
