@@ -38,7 +38,7 @@ cargo install cargo-watch # Optional; used for live reloading in `npm start`
 Next, run the following commands in a new, empty project directory:
 
 ```sh
-git clone degit rvanasa/vite-react-ic-rust # Clone this repo
+git clone https://github.com/domwoe/simple-reddit-clone # Clone this repo
 dfx start --clean --background # Run local IC replica in the background
 npm run setup # Install packages, deploy canisters, and generate type bindings
 
@@ -64,9 +64,6 @@ You'll need to have cycles to deploy to the Internet Computer. You can get cycle
 ```sh
 dfx deploy --network ic
 ```
-
-You
-
 
 ## Technology Stack
 
